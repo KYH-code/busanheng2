@@ -28,20 +28,23 @@ int train_length,
 	turn = 1,
 	value,
 	stage = 1,
-	escape = 0;
+	escape = 0,
+	temp = 0;
 
 bool check;
 
 int citizen_random, 
 	zombie_random,
 	madongseok_random,
-	madongseok_direction;
+	madongseok_direction,
+	villain_random;
 
 int citizen[10] = {
 	0, //시민 위치 값 저장할 배열칸
 	0, //시민 이동 전 위치 값 저장할 배열칸
 	1, //시민 어그로 값 저장할 배열칸
 	1, //시민 어그로 변경 전 값 저장할 배열칸
+	1, //시민 생존 여부 저장할 배열칸
 };
 
 int villain[10] = {
@@ -243,7 +246,16 @@ void citizen_action() {
 	}
 }
 
-void villain_action() {}
+void villain_action() {
+	villain_random = rand() % 101;
+	if (villain[0] - 1 == citizen[0]) {
+		if (villain_random <= villain[4]) {
+			temp = villain[0];
+			villain[0] = citizen[0];
+			citizen[0] = temp;
+		}
+	}
+}
 
 void zombie_action() {
 
@@ -252,6 +264,10 @@ void zombie_action() {
 	if (citizen[0] + 1 == zombie[0]) {
 		printf("GAME OVER! citizen dead...\n");
 		exit(0);
+	}
+	else if ((stage == 2) && (villain[0] + 1 == zombie[0])) {
+		printf("Zombie attacked villain, villain dead...\n");
+		stage == 0;
 	}
 	else if (zombie[0] + 1 == madongseok[0]) {
 		madongseok[4] = madongseok[4] - 1;
@@ -443,8 +459,14 @@ void stage_two() {
 	}
 }
 
-void stage_three() {}
-void stage_four() {}
+void stage_three() {
+	stage = 2;
+	escape = 0;
+}
+void stage_four() {
+	stage = 2;
+	escape = 0;
+}
 
 int main() {
 
