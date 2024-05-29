@@ -52,7 +52,8 @@ int madongseok[10] = {
 	0, //마동석 이동 전 위치 값 저장할 배열칸
 	1, //마동석 어그로 값 저장할 배열칸
 	1, //마동석 어그로 변경 전 값 저장할 배열칸
-	0, //마동석 스태미나 저장할 배열칸
+	0, //마동석 스테미나 저장할 배열칸
+	0, //마동석 이전 스테미나 저장할 배열칸
 	0, //마동석 행동 값 저장할 배열칸
 };
 
@@ -66,6 +67,8 @@ void madongseok_move();
 int state_aggro(int unit, int before_unit, int aggro);
 void citizen_state();
 void zombie_state();
+void madongseok_state();
+void citizen_action();
 
 int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 
@@ -184,6 +187,48 @@ void madongseok_state() {
 	}
 }
 
+void citizen_action() {
+	if (citizen[0] == 1) {
+		printf("You WIN!\n");
+		exit(0);
+	}
+	else {
+		printf("citizen does nothing.\n");
+	}
+}
+
+void zombie_action() {
+
+	madongseok[5] = madongseok[4];
+
+	if (citizen[0] + 1 == zombie[0]) {
+		printf("GAME OVER! citizen dead...\n");
+		exit(0);
+	}
+	else if (zombie[0] + 1 == madongseok[0]) {
+		print("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n");
+	}
+	else if ((citizen[0] + 1 == zombie[0]) && (zombie[0] + 1 == madongseok[0])) {
+		if (citizen[2] <= madongseok[2]) {
+			madongseok[4] = madongseok[4] - 1;
+			if (madongseok[4] - 1 == STM_MIN) {
+				printf("GAME OVER! madongseok dead...\n");
+				exit(0);
+			}
+			else {
+				printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", citizen[2], madongseok[2], madongseok[5], madongseok[4]);
+			}
+		}
+	}
+	else {
+		printf("zombie attacked nobody.\n");
+	}
+}
+
+void madongseok_action() {
+
+}
+
 int main() {
 
 	srand((unsigned int)time(NULL));
@@ -215,6 +260,12 @@ int main() {
 		print_train();
 
 		madongseok_state();
+
+		citizen_action();
+
+		zombie_action();
+
+		madongseok_action();
 
 		turn++;
 	}
