@@ -27,6 +27,7 @@ int train_length,
     percentile_probability,
 	turn = 1,
 	value,
+	stage = 1,
 	escape = 0;
 
 bool check;
@@ -41,6 +42,14 @@ int citizen[10] = {
 	0, //시민 이동 전 위치 값 저장할 배열칸
 	1, //시민 어그로 값 저장할 배열칸
 	1, //시민 어그로 변경 전 값 저장할 배열칸
+};
+
+int villain[10] = {
+	0, //빌런 위치 값 저장할 배열칸
+	0, //빌런 이동 전 위치 값 저장할 배열칸
+	1, //빌런 어그로 값 저장할 배열칸
+	1, //빌런 어그로 변경 전 값 저장할 배열칸
+	30, //빌런 발암 확률 저장할 배열칸
 };
 
 int zombie[10] = {
@@ -77,6 +86,11 @@ void pull_probability();
 int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX);
 void stamina_check();
 
+void stage_one();
+void stage_two();
+void stage_three();
+void stage_four();
+
 int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 
 	do {
@@ -102,6 +116,7 @@ void print_train() {
 			else {
 				if (j == 0 || j == train_length - 1) { printf("#"); }
 				else if (j == citizen[0]) { printf("C"); }
+				else if (j == villain[0] && stage == 2) { printf("V"); }
 				else if (j == zombie[0]) { printf("Z"); }
 				else if (j == madongseok[0]) { printf("M"); }
 				else { printf(" "); }
@@ -123,7 +138,7 @@ void citizen_move() {
 void zombie_move() {
 	zombie[1] = zombie[0];
 	zombie_random = rand() % 101;
-	zombie[0] = (madongseok[7] == 0 && turn % 2 != 0) ? ((zombie_random <= percentile_probability) ? (zombie[0] - 1) : zombie[0]) : zombie[0];
+	zombie[0] = (madongseok[7] == 0 && turn % 2 != 0) ? ((zombie_random <= percentile_probability) ? (citizen[2] >= madongseok[2]) ? (citizen[0] != zombie[0] - 1) ? zombie[0] - 1 : zombie[0] : (zombie[0] + 1 != madongseok[0]) ? zombie[0] + 1 : zombie[0] : zombie[0]) : zombie[0];
 }
 
 void madongseok_move() {
@@ -203,7 +218,6 @@ void citizen_action() {
 	if (citizen[0] == 1) {
 		printf("You WIN!\n");
 		escape = 1;
-		exit(0);
 	}
 	else {
 		printf("citizen does nothing.\n");
@@ -324,17 +338,6 @@ void stamina_check() {
 }
 
 void stage_one() {
-
-}
-
-int main() {
-
-	srand((unsigned int)time(NULL));
-
-	train_length = value_input("train_length", LEN_MIN, LEN_MAX);
-	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
-	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
-
 	citizen[0] = train_length - 6;
 	zombie[0] = train_length - 3;
 	madongseok[0] = train_length - 2;
@@ -346,7 +349,7 @@ int main() {
 		citizen_move();
 
 		zombie_move();
-		
+
 		print_train();
 
 		citizen_state();
@@ -361,13 +364,53 @@ int main() {
 
 		citizen_action();
 
+		if (escape == 1) { return; }
+
 		zombie_action();
 
 		madongseok_action();
 
 		turn++;
 	}
+}
 
+void stage_two() {
+	stage = 2;
+	escape = 0;
+
+	citizen[0] = train_length - 6;
+	villain[0] = train_length - 5;
+	zombie[0] = train_length - 3;
+	madongseok[0] = train_length - 2;
+
+	print_train();
+
+	while (1) {
+
+		if (escape == 1) { return; }
+
+	}
+}
+
+void stage_three() {}
+void stage_four() {}
+
+int main() {
+
+	srand((unsigned int)time(NULL));
+
+	train_length = value_input("train_length", LEN_MIN, LEN_MAX);
+	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
+	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
+
+	stage_one();
+	stage_two();
+	stage_three();
+	stage_four();
+
+	/*if (escape == 1) { stage_two(); }
+	if (escape == 1) { stage_three(); }
+	if (escape == 1) { stage_four(); }*/
 
 	return 0;
 }
