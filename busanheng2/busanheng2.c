@@ -25,9 +25,9 @@
 
 int train_length,
     percentile_probability,
-	turn = 1;
-
-int value;
+	turn = 1,
+	value,
+	escape = 0;
 
 bool check;
 
@@ -202,6 +202,7 @@ void madongseok_state() {
 void citizen_action() {
 	if (citizen[0] == 1) {
 		printf("You WIN!\n");
+		escape = 1;
 		exit(0);
 	}
 	else {
@@ -320,6 +321,10 @@ void stamina_check() {
 		printf("GAME OVER! madongseok dead...\n");
 		exit(0);
 	}
+}
+
+void stage_one() {
+
 }
 
 int main() {
