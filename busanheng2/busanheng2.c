@@ -56,6 +56,7 @@ int madongseok[10] = {
 	0, //마동석 스테미나 저장할 배열칸
 	0, //마동석 이전 스테미나 저장할 배열칸
 	0, //마동석 행동 값 저장할 배열칸
+	0, //마동석 ACTION_PULL 성공 여부 저장 배열칸
 };
 
 //함수 Prototype 영역
@@ -72,6 +73,9 @@ void madongseok_state();
 void citizen_action();
 void zombie_action();
 void madongseok_action();
+void pull_probability();
+int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX);
+void stamina_check();
 
 int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 
@@ -119,7 +123,7 @@ void citizen_move() {
 void zombie_move() {
 	zombie[1] = zombie[0];
 	zombie_random = rand() % 101;
-	zombie[0] = (turn % 2 != 0) ? ((zombie_random <= percentile_probability) ? (zombie[0] - 1) : zombie[0]) : zombie[0];
+	zombie[0] = (madongseok[7] == 0 && turn % 2 != 0) ? ((zombie_random <= percentile_probability) ? (zombie[0] - 1) : zombie[0]) : zombie[0];
 }
 
 void madongseok_move() {
@@ -166,19 +170,23 @@ void citizen_state() {
 void zombie_state() {
 
 	if (turn % 2 != 0) {
-
-		if (zombie[0] == zombie[1]) {
-			printf("zombie: stay %d\n", zombie[0]);
+		if (madongseok[7] == 1) {
+			printf("zombie: stay %d (Caught by madongseok)\n", zombie[0]);
 		}
 		else {
-			printf("zombie: %d -> %d\n", zombie[1], zombie[0]);
+			if (zombie[0] == zombie[1]) {
+				printf("zombie: stay %d\n", zombie[0]);
+			}
+			else {
+				printf("zombie: %d -> %d\n", zombie[1], zombie[0]);
+			}
 		}
 	}
 	else {
 		printf("zombie: stay %d (cannot move)\n", zombie[0]);
 	}
 	printf("\n");
-
+	
 }
 
 void madongseok_state() {
@@ -188,6 +196,7 @@ void madongseok_state() {
 	else {
 		printf("madongseok: %d -> %d (aggro: %d -> %d, stamina: %d)\n", madongseok[1], madongseok[0], madongseok[3], madongseok[2], madongseok[4]);
 	}
+	printf("\n");
 }
 
 void citizen_action() {
@@ -209,23 +218,24 @@ void zombie_action() {
 		exit(0);
 	}
 	else if (zombie[0] + 1 == madongseok[0]) {
+		madongseok[4] = madongseok[4] - 1;
 		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", madongseok[5], madongseok[4]);
 	}
 	else if ((citizen[0] + 1 == zombie[0]) && (zombie[0] + 1 == madongseok[0])) {
 		if (citizen[2] <= madongseok[2]) {
 			madongseok[4] = madongseok[4] - 1;
-			if (madongseok[4] - 1 == STM_MIN) {
-				printf("GAME OVER! madongseok dead...\n");
-				exit(0);
-			}
-			else {
-				printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", citizen[2], madongseok[2], madongseok[5], madongseok[4]);
-			}
+			printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", citizen[2], madongseok[2], madongseok[5], madongseok[4]);
+		}
+		else {
+			printf("GAME OVER! citizen dead...\n");
+			exit(0);
 		}
 	}
 	else {
 		printf("zombie attacked nobody.\n");
 	}
+
+	stamina_check();
 }
 
 void madongseok_action() {
@@ -242,7 +252,7 @@ void madongseok_action() {
 			scanf_s("%d", &madongseok[6]);
 			check = !value_check(madongseok[6], ACTION_REST, ACTION_PULL);
 		} while (check);
-	}
+	} printf("\n");
 
 	madongseok[3] = madongseok[2];
 	madongseok[5] = madongseok[4];
@@ -250,8 +260,8 @@ void madongseok_action() {
 	switch (madongseok[6]) {
 		case 0:
 			printf("madongseok rests...\n");
-			madongseok[2] = madongseok[2] - 1;
-			madongseok[4] = madongseok[4] + 1;
+			madongseok[2] = stat_management(madongseok[2], -1, AGGRO_MIN, AGGRO_MAX);
+			madongseok[4] = stat_management(madongseok[4], 1, STM_MIN, STM_MAX);
 			printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[5], madongseok[4]);
 			break;
 
@@ -268,13 +278,48 @@ void madongseok_action() {
 		default:
 			break;
 	}
-
+	
+	stamina_check();
 
 }
 
 void pull_probability() {
 	madongseok_random = rand() % 101;
-	madongseok[2] = madongseok
+	madongseok[2] = stat_management(madongseok[2], 2, AGGRO_MIN, AGGRO_MAX);
+	madongseok[4] = stat_management(madongseok[4], -1, STM_MIN, STM_MAX);
+
+	if (100 - percentile_probability >= madongseok_random) { 
+		madongseok[7] = 1;
+		printf("madongseok pulled zombie... Next turn, it can't move\n");
+	}
+	else { 
+		madongseok[7] = 0;
+		printf("madongseok failed to pull zombie\n");
+	}
+
+	printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[5], madongseok[4]);
+}
+
+int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX) {
+
+	if (stat + operand >= DEFINE_MIN && stat + operand <= DEFINE_MAX) {
+		stat = stat + operand;
+	}
+	else if (stat + operand > DEFINE_MAX) {
+		stat = DEFINE_MAX;
+	}
+	else if (stat + operand < DEFINE_MIN) {
+		stat = DEFINE_MIN;
+	}
+
+	return stat;
+}
+
+void stamina_check() {
+	if (madongseok[4] == 0) {
+		printf("GAME OVER! madongseok dead...\n");
+		exit(0);
+	}
 }
 
 int main() {
