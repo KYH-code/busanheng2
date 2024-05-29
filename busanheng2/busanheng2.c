@@ -33,6 +33,7 @@ bool check;
 
 int citizen_random, 
 	zombie_random,
+	madongseok_random,
 	madongseok_direction;
 
 int citizen[10] = {
@@ -69,6 +70,8 @@ void citizen_state();
 void zombie_state();
 void madongseok_state();
 void citizen_action();
+void zombie_action();
+void madongseok_action();
 
 int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 
@@ -206,7 +209,7 @@ void zombie_action() {
 		exit(0);
 	}
 	else if (zombie[0] + 1 == madongseok[0]) {
-		print("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n");
+		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", madongseok[5], madongseok[4]);
 	}
 	else if ((citizen[0] + 1 == zombie[0]) && (zombie[0] + 1 == madongseok[0])) {
 		if (citizen[2] <= madongseok[2]) {
@@ -226,7 +229,52 @@ void zombie_action() {
 }
 
 void madongseok_action() {
+	if(madongseok[0] - 1 != zombie[0]) {
+		do {
+			printf("madongseok action(%d.rest, %d.provoke)>> ", ACTION_REST, ACTION_PROVOKE);
+			scanf_s("%d", &madongseok[6]);
+			check = !value_check(madongseok[6], ACTION_REST, ACTION_PROVOKE);
+		} while (check);
+	}
+	else {
+		do {
+			printf("madongseok action(%d.rest, %d.provoke, %d.pull)>> ", ACTION_REST, ACTION_PROVOKE, ACTION_PULL);
+			scanf_s("%d", &madongseok[6]);
+			check = !value_check(madongseok[6], ACTION_REST, ACTION_PULL);
+		} while (check);
+	}
 
+	madongseok[3] = madongseok[2];
+	madongseok[5] = madongseok[4];
+
+	switch (madongseok[6]) {
+		case 0:
+			printf("madongseok rests...\n");
+			madongseok[2] = madongseok[2] - 1;
+			madongseok[4] = madongseok[4] + 1;
+			printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[5], madongseok[4]);
+			break;
+
+		case 1:
+			printf("madongseok provoked zombie...\n");
+			madongseok[2] = AGGRO_MAX;
+			printf("madongseok: %d (aggro: %d -> %d, stamina: %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[4]);
+			break;
+
+		case 2:
+			pull_probability();
+			break;
+
+		default:
+			break;
+	}
+
+
+}
+
+void pull_probability() {
+	madongseok_random = rand() % 101;
+	madongseok[2] = madongseok
 }
 
 int main() {
