@@ -73,13 +73,16 @@ int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX);
 bool value_check(int value, int DEFINE_MIN, int DEFINE_MAX);
 void print_train();
 void citizen_move();
+void villain_move();
 void zombie_move();
 void madongseok_move();
 int state_aggro(int unit, int before_unit, int aggro);
 void citizen_state();
+void villain_state();
 void zombie_state();
 void madongseok_state();
 void citizen_action();
+void villain_action();
 void zombie_action();
 void madongseok_action();
 void pull_probability();
@@ -135,6 +138,13 @@ void citizen_move() {
 	citizen[2] = state_aggro(citizen[0], citizen[1], citizen[2]);
 }
 
+void villain_move() {
+	villain[1] = villain[0];
+	villain[0] = (citizen[0] != citizen[1]) ? (villain[0] - 1) : villain[0];
+	villain[3] = villain[2];
+	villain[2] = state_aggro(villain[0], villain[1], villain[2]);
+}
+
 void zombie_move() {
 	zombie[1] = zombie[0];
 	zombie_random = rand() % 101;
@@ -182,6 +192,15 @@ void citizen_state() {
 	}
 }
 
+void villain_state() {
+	if (villain[0] == villain[1]) {
+		printf("villain: stay %d (aggro: %d -> %d)\n", villain[0], villain[3], villain[2]);
+	}
+	else {
+		printf("villain: %d -> %d (aggro: %d -> %d)\n", villain[1], villain[0], villain[3], villain[2]);
+	}
+}
+
 void zombie_state() {
 
 	if (turn % 2 != 0) {
@@ -223,6 +242,8 @@ void citizen_action() {
 		printf("citizen does nothing.\n");
 	}
 }
+
+void villain_action() {}
 
 void zombie_action() {
 
@@ -387,7 +408,37 @@ void stage_two() {
 
 	while (1) {
 
+		citizen_move();
+
+		villain_move();
+
+		zombie_move();
+
+		print_train();
+
+		citizen_state();
+
+		villain_state();
+
+		zombie_state();
+
+		madongseok_move();
+
+		print_train();
+
+		madongseok_state();
+
+		citizen_action();
+
 		if (escape == 1) { return; }
+
+		villain_action();
+
+		zombie_action();
+
+		madongseok_action();
+
+		turn++;
 
 	}
 }
