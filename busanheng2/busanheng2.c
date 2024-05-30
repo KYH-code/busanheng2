@@ -1,3 +1,4 @@
+// STAGE 4 개발 진행 중
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -169,17 +170,26 @@ void citizen_move(int citizen_num) {
 	citizen[citizen_num][1] = citizen[citizen_num][0];
 	citizen_random = rand() % 101;
 
-	if (citizen[citizen_num][0] != 1 && citizen[citizen_num][0] - 1 != citizen[citizen_num][1]) {
-		for (int i = 0; i < MAX_CITIZEN; i++) {
-			if (i != citizen_num && citizen[citizen_num][0] - 1 == citizen[i][0]) {
-				return; // 다른 시민이 이미 해당 위치에 있으면 이동하지 않음
+	if (citizen[citizen_num][4] == 1) {
+		if (citizen[citizen_num][0] != 1 && citizen[citizen_num][0] - 1 != citizen[citizen_num][1]) {
+			for (int i = 0; i < MAX_CITIZEN; i++) {
+				if (i != citizen_num && citizen[citizen_num][0] - 1 == citizen[i][0]) {
+					return; // 다른 시민이 이미 해당 위치에 있으면 이동하지 않음
+				}
 			}
 		}
-	}
 
-	citizen[citizen_num][0] = (100 - percentile_probability >= citizen_random) ? (citizen[citizen_num][0] - 1) : citizen[citizen_num][0];
-	citizen[citizen_num][3] = citizen[citizen_num][2];
-	citizen[citizen_num][2] = state_aggro(citizen[citizen_num][0], citizen[citizen_num][1], citizen[citizen_num][2]);
+		citizen[citizen_num][0] = (100 - percentile_probability >= citizen_random) ? (citizen[citizen_num][0] - 1) : citizen[citizen_num][0];
+		citizen[citizen_num][3] = citizen[citizen_num][2];
+		citizen[citizen_num][2] = state_aggro(citizen[citizen_num][0], citizen[citizen_num][1], citizen[citizen_num][2]);
+	}
+	else {
+		citizen[citizen_num][0] = (citizen_random <= percentile_probability) ?
+			((citizen[citizen_num][2] >= madongseok[2]) ?
+				((citizen[citizen_num][0] != zombie[0] - 1) ? zombie[0] - 1 : zombie[0]) :
+				((zombie[0] + 1 != madongseok[0]) ? zombie[0] + 1 : zombie[0])) :
+			zombie[0];
+	}
 }
 
 // 빌런 이동 함수
@@ -790,9 +800,9 @@ int main() {
 	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
 	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
 
-	stage_one(0);
+	/*stage_one(0);
 	stage_two(0);
-	stage_three();
+	stage_three();*/
 	stage_four();
 
 	return 0;
