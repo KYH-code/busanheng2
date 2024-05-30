@@ -27,24 +27,24 @@
 #define MAX_CITIZEN 5
 
 int train_length,
-percentile_probability,
-turn = 1,
-value,
-stage = 1,
-escape = 0,
-temp = 0;
+	percentile_probability,
+	turn = 1,
+	value,
+	stage = 1,
+	escape = 0,
+	temp = 0;
 
 bool check;
 
 int citizen_random,
-zombie_random,
-madongseok_random,
-madongseok_direction,
-villain_random,
-citizen_count = 0,
-random_location,
-LOCATION_MAX,
-living_citizen = 0;
+	zombie_random,
+	madongseok_random,
+	madongseok_direction,
+	villain_random,
+	citizen_count = 0,
+	random_location,
+	LOCATION_MAX,
+	living_citizen = 0;
 
 int citizen[5][5] = {
 	{
@@ -84,6 +84,7 @@ int madongseok[8] = {
 	0, //마동석 ACTION_PULL 성공 여부 저장 배열칸
 };
 
+// 시민 랜덤 생성 시 생성 위치 저장할 배열
 int valid_location[MAX_CITIZEN] = { 0 };
 
 //함수 Prototype 영역
@@ -115,6 +116,7 @@ void stage_two(int citizen_num);
 void stage_three();
 void stage_four();
 
+// 입력 값 범위 검사하는 함수
 int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 
 	do {
@@ -127,10 +129,12 @@ int value_input(const char* message, int DEFINE_MIN, int DEFINE_MAX) {
 	return value;
 }
 
+// 입력 값 범위 검사 결과 확인하는 함수
 bool value_check(int value, int DEFINE_MIN, int DEFINE_MAX) {
 	return (value >= DEFINE_MIN && value <= DEFINE_MAX);
 }
 
+// 열차 출력 함수
 void print_train() {
 	printf("\n");
 
@@ -139,11 +143,16 @@ void print_train() {
 			if (i == 0 || i == 2) { printf("#"); }
 			else {
 				if (j == 0 || j == train_length - 1) { printf("#"); }
-				else if (j == citizen[0][0]) { printf("C"); }
-				else if (j == citizen[1][0] && citizen[1][0] != 0) { printf("C"); }
-				else if (j == citizen[2][0] && citizen[2][0] != 0) { printf("C"); }
-				else if (j == citizen[3][0] && citizen[3][0] != 0) { printf("C"); }
-				else if (j == citizen[4][0] && citizen[4][0] != 0) { printf("C"); }
+				else if (j == citizen[0][0] && citizen[0][0] != 0 && citizen[0][4] == 1) { printf("C"); }
+				else if (j == citizen[0][0] && citizen[0][0] != 0 && citizen[0][4] == 0) { printf("Z"); }
+				else if (j == citizen[1][0] && citizen[1][0] != 0 && citizen[1][4] == 1) { printf("C"); }
+				else if (j == citizen[1][0] && citizen[1][0] != 0 && citizen[1][4] == 0) { printf("Z"); }
+				else if (j == citizen[2][0] && citizen[2][0] != 0 && citizen[2][4] == 1) { printf("C"); }
+				else if (j == citizen[2][0] && citizen[2][0] != 0 && citizen[2][4] == 0) { printf("Z"); }
+				else if (j == citizen[3][0] && citizen[3][0] != 0 && citizen[3][4] == 1) { printf("C"); }
+				else if (j == citizen[3][0] && citizen[3][0] != 0 && citizen[3][4] == 0) { printf("Z"); }
+				else if (j == citizen[4][0] && citizen[4][0] != 0 && citizen[4][4] == 1) { printf("C"); }
+				else if (j == citizen[4][0] && citizen[4][0] != 0 && citizen[4][4] == 0) { printf("Z"); }
 				else if (j == villain[0] && stage == 2) { printf("V"); }
 				else if (j == zombie[0]) { printf("Z"); }
 				else if (j == madongseok[0]) { printf("M"); }
@@ -155,6 +164,7 @@ void print_train() {
 	printf("\n");
 }
 
+// 시민 이동 함수
 void citizen_move(int citizen_num) {
 	citizen[citizen_num][1] = citizen[citizen_num][0];
 	citizen_random = rand() % 101;
@@ -172,6 +182,7 @@ void citizen_move(int citizen_num) {
 	citizen[citizen_num][2] = state_aggro(citizen[citizen_num][0], citizen[citizen_num][1], citizen[citizen_num][2]);
 }
 
+// 빌런 이동 함수
 void villain_move(int citizen_num) {
 	villain[1] = villain[0];
 	villain[0] = (citizen[citizen_num][0] != citizen[citizen_num][1]) ? (villain[0] - 1) : villain[0];
@@ -179,12 +190,14 @@ void villain_move(int citizen_num) {
 	villain[2] = state_aggro(villain[0], villain[1], villain[2]);
 }
 
+// 좀비 이동 함수
 void zombie_move(int citizen_num) {
 	zombie[1] = zombie[0];
 	zombie_random = rand() % 101;
 	zombie[0] = (madongseok[7] == 0 && turn % 2 != 0) ? ((zombie_random <= percentile_probability) ? (citizen[citizen_num][2] >= madongseok[2]) ? (citizen[citizen_num][0] != zombie[0] - 1) ? zombie[0] - 1 : zombie[0] : (zombie[0] + 1 != madongseok[0]) ? zombie[0] + 1 : zombie[0] : zombie[0]) : zombie[0];
 }
 
+// 마동석 이동 함수
 void madongseok_move() {
 	madongseok[1] = madongseok[0];
 	do {
@@ -208,6 +221,7 @@ void madongseok_move() {
 	madongseok[2] = state_aggro(madongseok[0], madongseok[1], madongseok[2]);
 }
 
+// 어그로 관리 함수
 int state_aggro(int unit, int before_unit, int aggro) {
 	if (aggro > AGGRO_MIN && aggro < AGGRO_MAX) {
 		if (unit != before_unit) { aggro++; }
@@ -217,6 +231,7 @@ int state_aggro(int unit, int before_unit, int aggro) {
 	return aggro;
 }
 
+//시민 상태 출력 함수
 void citizen_state(int citizen_num) {
 	if (citizen[citizen_num][0] == citizen[citizen_num][1]) {
 		if (stage == 3 || stage == 4) {
@@ -236,6 +251,7 @@ void citizen_state(int citizen_num) {
 	}
 }
 
+// 빌런 상태 출력 함수
 void villain_state() {
 	if (villain[0] == villain[1]) {
 		printf("villain: stay %d (aggro: %d -> %d)\n", villain[0], villain[3], villain[2]);
@@ -245,6 +261,7 @@ void villain_state() {
 	}
 }
 
+// 좀비 상태 출력 함수
 void zombie_state() {
 
 	if (turn % 2 != 0) {
@@ -267,6 +284,7 @@ void zombie_state() {
 
 }
 
+// 마동석 상태 출력 함수
 void madongseok_state() {
 	if (madongseok[0] == madongseok[1]) {
 		printf("madongseok: stay %d (aggro: %d -> %d, stamina: %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[4]);
@@ -277,13 +295,19 @@ void madongseok_state() {
 	printf("\n");
 }
 
+// 시민 행동 함수
 void citizen_action(int citizen_num) {
 	if (citizen[citizen_num][0] == 1) {
-		printf("You WIN!\n");
+		printf("You WIN!\n\n\n");
 		escape = 1;
 	}
-	else if (citizen[citizen_num][0] + 1 == zombie[0] && (stage == 3 || stage == 4)) {
+	else if (citizen[citizen_num][0] + 1 == zombie[0] && stage == 3) {
 		printf("citizen%d has been attacked by zombie.\n", citizen_num);
+		living_citizen--;
+	}
+	else if (citizen[citizen_num][0] + 1 == zombie[0] && stage == 4) {
+		printf("citizen%d turned into a zombie!\n", citizen_num);
+		citizen[citizen_num][4] = 0;
 		living_citizen--;
 	}
 	else {
@@ -296,6 +320,7 @@ void citizen_action(int citizen_num) {
 	}
 }
 
+// 빌런 행동 함수
 void villain_action(int citizen_num) {
 	villain_random = rand() % 101;
 	if (villain[0] - 1 == citizen[citizen_num][0]) {
@@ -307,6 +332,7 @@ void villain_action(int citizen_num) {
 	}
 }
 
+// 좀비 행동 함수
 void zombie_action(int citizen_num) {
 
 	madongseok[5] = madongseok[4];
@@ -351,6 +377,7 @@ void zombie_action(int citizen_num) {
 
 }
 
+// 마동석 행동 함수
 void madongseok_action() {
 	if (madongseok[0] - 1 != zombie[0]) {
 		do {
@@ -396,6 +423,7 @@ void madongseok_action() {
 
 }
 
+// 붙들기 확률 함수
 void pull_probability() {
 	madongseok_random = rand() % 101;
 	madongseok[2] = stat_management(madongseok[2], 2, AGGRO_MIN, AGGRO_MAX);
@@ -413,6 +441,7 @@ void pull_probability() {
 	printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", madongseok[0], madongseok[3], madongseok[2], madongseok[5], madongseok[4]);
 }
 
+// 스탯 관리 함수
 int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX) {
 
 	if (stat + operand >= DEFINE_MIN && stat + operand <= DEFINE_MAX) {
@@ -428,6 +457,7 @@ int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX) {
 	return stat;
 }
 
+// 스테미나 체크 함수
 void stamina_check() {
 	if (madongseok[4] == 0) {
 		printf("GAME OVER! madongseok dead...\n");
@@ -435,6 +465,7 @@ void stamina_check() {
 	}
 }
 
+// 열차 길이에 따른 시민 생성을 위한 길이 계산 함수
 void citizen_counter() {
 	if (train_length >= 15 && train_length <= 20) { citizen_count = 2; }
 	else if (train_length >= 21 && train_length <= 30) { citizen_count = 3; }
@@ -446,6 +477,7 @@ void citizen_counter() {
 	citizen_setting();
 }
 
+// 추가될 시민들 초기 값 세팅 함수
 void citizen_setting() {
 	LOCATION_MAX = citizen[0][0] - 1;
 	for (int i = 1; i < citizen_count; i++) {
@@ -471,18 +503,34 @@ void citizen_setting() {
 	}
 }
 
+// 좀비한테 물렸는지 확인하는 변수
 void citizen_bite(int citizen_num) {
 	if (citizen[citizen_num][0] + 1 == zombie[0]) {
-		if (citizen[citizen_num][2] > madongseok[2]) {
+		if (stage == 3) {
 			citizen[citizen_num][0] = 0;
 			living_citizen--;
+		}
+		else if (stage == 4) {
+			citizen[citizen_num][4] = 0;
+		}
+	}
+	else if (citizen[citizen_num][0] + 1 == zombie[0] && zombie[0] + 1 == madongseok[0]) {
+		if (citizen[citizen_num][2] > madongseok[2]) {
+			if (stage == 3) {
+				citizen[citizen_num][0] = 0;
+				living_citizen--;
+			}
+			else if (stage == 4) {
+				citizen[citizen_num][4] = 0;
+			}
 		}
 	}
 }
 
+// 스테이지 1
 void stage_one(int citizen_num) {
 
-	printf("STAGE 1\n\n\n");
+	printf("STAGE 1\n\n");
 
 	citizen[citizen_num][0] = train_length - 6;
 	zombie[0] = train_length - 3;
@@ -520,9 +568,10 @@ void stage_one(int citizen_num) {
 	}
 }
 
+// 스테이지 2
 void stage_two(int citizen_num) {
 
-	printf("STAGE 2\n\n\n");
+	printf("STAGE 2\n\n");
 
 	stage = 2;
 	escape = 0;
@@ -571,9 +620,10 @@ void stage_two(int citizen_num) {
 	}
 }
 
+// 스테이지 3
 void stage_three() {
 
-	printf("STAGE 3\n\n\n");
+	printf("STAGE 3\n\n");
 
 	stage = 3;
 	escape = 0;
@@ -650,14 +700,88 @@ void stage_three() {
 	}
 }
 
+// 스테이지 4
 void stage_four() {
 
-	printf("STAGE 4\n\n\n");
+	printf("STAGE 4\n\n");
 
 	stage = 3;
 	escape = 0;
+
+	citizen[0][0] = train_length - 6;
+	citizen_counter();
+	villain[0] = train_length - 5;
+	zombie[0] = train_length - 3;
+	madongseok[0] = train_length - 2;
+
+	print_train();
+
+	while (1) {
+
+		for (int i = 0; i < citizen_count; i++) {
+			citizen_move(i);
+		}
+
+		int max_index = -1;
+		int max_value = -1;
+
+		for (int i = 0; i < citizen_count; i++) {
+			if (citizen[i][0] > max_value) {
+				max_value = citizen[i][0];
+				max_index = i;
+			}
+		}
+
+		// max_index가 유효한지 확인 후 zombie_move 호출
+		if (max_index != -1) {
+			zombie_move(max_index);
+			citizen_bite(max_index);
+		}
+
+		print_train();
+
+		for (int i = 0; i < citizen_count; i++) {
+			citizen_state(i);
+		}
+
+		zombie_state();
+
+		madongseok_move();
+
+		print_train();
+
+		madongseok_state();
+
+		for (int i = 0; i < citizen_count; i++) {
+			if (citizen[i][0] != 0) { citizen_action(i); }
+		}
+
+		if (escape == 1) { return; }
+
+		max_index = -1;
+		max_value = -1;
+
+		for (int i = 0; i < citizen_count; i++) {
+			if (citizen[i][0] > max_value) {
+				max_value = citizen[i][0];
+				max_index = i;
+			}
+		}
+
+		// max_index가 유효한지 확인 후 zombie_action 호출
+		if (max_index != -1) {
+			zombie_action(max_index);
+		}
+
+		madongseok_action();
+
+		turn++;
+
+	}
+
 }
 
+// 메인 함수
 int main() {
 
 	srand((unsigned int)time(NULL));
@@ -666,9 +790,9 @@ int main() {
 	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
 	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
 
-	stage_one(0);
+	/*stage_one(0);
 	stage_two(0);
-	stage_three();
+	stage_three();*/
 	stage_four();
 
 	return 0;
