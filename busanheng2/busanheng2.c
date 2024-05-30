@@ -790,9 +790,9 @@ int main() {
 	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
 	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
 
-	/*stage_one(0);
+	stage_one(0);
 	stage_two(0);
-	stage_three();*/
+	stage_three();
 	stage_four();
 
 	return 0;
