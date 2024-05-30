@@ -44,7 +44,7 @@ villain_random,
 citizen_count = 0,
 random_location,
 LOCATION_MAX,
-living_citizen;
+living_citizen = 0;
 
 int citizen[5][5] = {
 	{
@@ -108,6 +108,7 @@ int stat_management(int stat, int operand, int DEFINE_MIN, int DEFINE_MAX);
 void stamina_check();
 void citizen_counter();
 void citizen_setting();
+void citizen_bite(int citizen_num);
 
 void stage_one(int citizen_num);
 void stage_two(int citizen_num);
@@ -157,6 +158,15 @@ void print_train() {
 void citizen_move(int citizen_num) {
 	citizen[citizen_num][1] = citizen[citizen_num][0];
 	citizen_random = rand() % 101;
+
+	if (citizen[citizen_num][0] != 1 && citizen[citizen_num][0] - 1 != citizen[citizen_num][1]) {
+		for (int i = 0; i < MAX_CITIZEN; i++) {
+			if (i != citizen_num && citizen[citizen_num][0] - 1 == citizen[i][0]) {
+				return; // 다른 시민이 이미 해당 위치에 있으면 이동하지 않음
+			}
+		}
+	}
+
 	citizen[citizen_num][0] = (100 - percentile_probability >= citizen_random) ? (citizen[citizen_num][0] - 1) : citizen[citizen_num][0];
 	citizen[citizen_num][3] = citizen[citizen_num][2];
 	citizen[citizen_num][2] = state_aggro(citizen[citizen_num][0], citizen[citizen_num][1], citizen[citizen_num][2]);
@@ -209,10 +219,20 @@ int state_aggro(int unit, int before_unit, int aggro) {
 
 void citizen_state(int citizen_num) {
 	if (citizen[citizen_num][0] == citizen[citizen_num][1]) {
-		printf("citizen: stay %d (aggro: %d -> %d)\n", citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		if (stage == 3 || stage == 4) {
+			printf("citizen%d: stay %d (aggro: %d -> %d)\n", citizen_num, citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		}
+		else {
+			printf("citizen: stay %d (aggro: %d -> %d)\n", citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		}
 	}
 	else {
-		printf("citizen: %d -> %d (aggro: %d -> %d)\n", citizen[citizen_num][1], citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		if (stage == 3 || stage == 4) {
+			printf("citizen%d: %d -> %d (aggro: %d -> %d)\n", citizen_num, citizen[citizen_num][1], citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		}
+		else {
+			printf("citizen: %d -> %d (aggro: %d -> %d)\n", citizen[citizen_num][1], citizen[citizen_num][0], citizen[citizen_num][3], citizen[citizen_num][2]);
+		}
 	}
 }
 
@@ -264,6 +284,7 @@ void citizen_action(int citizen_num) {
 	}
 	else if (citizen[citizen_num][0] + 1 == zombie[0] && (stage == 3 || stage == 4)) {
 		printf("citizen%d has been attacked by zombie.\n", citizen_num);
+		living_citizen--;
 	}
 	else {
 		if (stage == 3 || stage == 4) {
@@ -290,9 +311,15 @@ void zombie_action(int citizen_num) {
 
 	madongseok[5] = madongseok[4];
 
+	if (stage == 3 || stage == 4) {
+		printf("%d citizen(s) alive(s).\n", living_citizen);
+	}
+
 	if (citizen[citizen_num][0] + 1 == zombie[0]) {
-		printf("GAME OVER! citizen dead...\n");
-		exit(0);
+		if (living_citizen == 0) {
+			printf("GAME OVER! citizen dead...\n");
+			exit(0);
+		}
 	}
 	else if ((stage == 2) && (villain[0] + 1 == zombie[0])) {
 		printf("Zombie attacked villain, villain dead...\n");
@@ -308,8 +335,10 @@ void zombie_action(int citizen_num) {
 			printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", citizen[citizen_num][2], madongseok[2], madongseok[5], madongseok[4]);
 		}
 		else {
-			printf("GAME OVER! citizen dead...\n");
-			exit(0);
+			if (living_citizen == 0) {
+				printf("GAME OVER! citizen dead...\n");
+				exit(0);
+			}
 		}
 	}
 	else {
@@ -442,7 +471,19 @@ void citizen_setting() {
 	}
 }
 
+void citizen_bite(int citizen_num) {
+	if (citizen[citizen_num][0] + 1 == zombie[0]) {
+		if (citizen[citizen_num][2] > madongseok[2]) {
+			citizen[citizen_num][0] = 0;
+			living_citizen--;
+		}
+	}
+}
+
 void stage_one(int citizen_num) {
+
+	printf("STAGE 1\n\n\n");
+
 	citizen[citizen_num][0] = train_length - 6;
 	zombie[0] = train_length - 3;
 	madongseok[0] = train_length - 2;
@@ -480,6 +521,9 @@ void stage_one(int citizen_num) {
 }
 
 void stage_two(int citizen_num) {
+
+	printf("STAGE 2\n\n\n");
+
 	stage = 2;
 	escape = 0;
 
@@ -528,6 +572,9 @@ void stage_two(int citizen_num) {
 }
 
 void stage_three() {
+
+	printf("STAGE 3\n\n\n");
+
 	stage = 3;
 	escape = 0;
 
@@ -558,6 +605,7 @@ void stage_three() {
 		// max_index가 유효한지 확인 후 zombie_move 호출
 		if (max_index != -1) {
 			zombie_move(max_index);
+			citizen_bite(max_index);
 		}
 
 		print_train();
@@ -575,7 +623,7 @@ void stage_three() {
 		madongseok_state();
 
 		for (int i = 0; i < citizen_count; i++) {
-			citizen_action(i);
+			if (citizen[i][0] != 0) { citizen_action(i); }
 		}
 
 		if (escape == 1) { return; }
@@ -603,6 +651,9 @@ void stage_three() {
 }
 
 void stage_four() {
+
+	printf("STAGE 4\n\n\n");
+
 	stage = 3;
 	escape = 0;
 }
@@ -615,8 +666,8 @@ int main() {
 	madongseok[4] = value_input("madongseok stamina", STM_MIN, STM_MAX);
 	percentile_probability = value_input("percentile probability 'p'", PROB_MIN, PROB_MAX);
 
-	/*stage_one(0);
-	stage_two(0);*/
+	stage_one(0);
+	stage_two(0);
 	stage_three();
 	stage_four();
 
